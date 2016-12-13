@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<ruleset name="PHP_CodeSniffer">
+	<description>The coding standards for visual-composer-addons.</description>
+
+	<file>./scalable-vector-graphics.php</file>
+
+	<arg name="warning-severity" value="0"/>
+
+	<!-- Run against the PHPCompatibility ruleset -->
+    <rule ref="PHPCompatibility">
+    	<config name="testVersion" value="5.6-7.0"/>
+    	<!-- This project doesnt need this, managed by wordpress -->
+    	<exclude name="PHPCompatibility.PHP.DefaultTimezoneRequired" />
+    </rule>
+
+	<rule ref="WordPress"/>
+	<rule ref="Wordpress-Extra"/>
+</ruleset>

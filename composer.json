@@ -1,0 +1,38 @@
+{
+	"name": "grok/scalable-vector-graphics-svg",
+	"description": "Scalable Vector Graphics are two-dimensional vector graphics, that can be both static and dynamic. This plugin allows your to easily use them on your site.",
+	"version": "3.2",
+	"type": "wordpress-plugin",
+	"keywords": ["svg", "wordpress"],
+	"homepage": "https://github.com/grok/wordpress-plugin-scalable-vector-graphics",
+	"license": "GPL-2.0+",
+	"authors": [
+		{
+			"name": "Sterling Hamilton",
+			"email": "sterling.hamilton+git@gmail.com",
+			"homepage": "http://sterlinghamilton.com/",
+			"role": "Developer"
+		}
+	],
+	"repositories": [
+		{
+			"type": "composer",
+			"url": "https://wpackagist.org"
+		}
+	],
+	"minimum-stability": "dev",
+	"require": {
+		"php": ">=5.6"
+	},
+	"require-dev": {
+		"squizlabs/php_codesniffer": "*",
+		"wp-coding-standards/wpcs": "*",
+		"frenck/php-compatibility": "*",
+		"dealerdirect/phpcodesniffer-composer-installer": "*"
+	},
+	"scripts": {
+		"post-install-cmd": "@phpcs_standards",
+		"post-update-cmd" : "@phpcs_standards",
+		"phpcs_standards" : "\"vendor/bin/phpcs\" --config-set installed_paths vendor/wp-coding-standards/wpcs,vendor/frenck/php-compatibility"
+	}
+}
