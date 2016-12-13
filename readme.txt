@@ -44,6 +44,8 @@ Resources for understanding security risks:
 
 == Changelog ==
 
+= 3.3 =
+* Add failsafes for svg loading to prevent incorrect files to *break* wordpress media section
 = 3.2 =
 * Created End User styles to allow for the front of the site to display SVG files properly.
 = 3.1 =
