@@ -1,5 +1,5 @@
 <?php
-/*
+/**
  * Plugin Name: Scalable Vector Graphics (SVG)
  * Plugin URI: http://www.sterlinghamilton.com/projects/scalable-vector-graphics/
  * Description: Scalable Vector Graphics are two-dimensional vector graphics, that can be both static and dynamic. This plugin allows your to easily use them on your site.
@@ -21,21 +21,35 @@
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA	02110-1301, USA.
-*/
+ *
+ * @package scalable-vector-graphics-svg
+ */
 
 namespace SterlingHamilton\Plugins\ScalableVectorGraphics;
 
-// Return the accepted value for SVG mime-types in compliance with the RFC 3023.
-// RFC 3023: https://www.ietf.org/rfc/rfc3023.txt 8.19, A.1, A.2, A.3, A.5, and A.7
-// Expects to interface with https://codex.wordpress.org/Plugin_API/Filter_Reference/upload_mimes
+/**
+ * Returns the accepted value for SVG mime-types in compliance with the RFC 3023.
+ * RFC 3023: https://www.ietf.org/rfc/rfc3023.txt 8.19, A.1, A.2, A.3, A.5, and A.7
+ * Expects to interface with https://codex.wordpress.org/Plugin_API/Filter_Reference/upload_mimes.
+ *
+ * @param array $existing_mime_types Current wordpress allowed mime types for upload.
+ *
+ * @return array Edited mime types array.
+ */
 function allow_svg_uploads( $existing_mime_types = array() ) {
 	return $existing_mime_types + array( 'svg' => 'image/svg+xml' );
 }
 
-// This is a decent way of grabbing the dimensions of SVG files.
-// Depends on http://php.net/manual/en/function.simplexml-load-file.php
-// I believe this to be a reasonable dependency and should be common enough to
-// not cause problems.
+/**
+ * This is a decent way of grabbing the dimensions of SVG files.
+ * Depends on http://php.net/manual/en/function.simplexml-load-file.php
+ * I believe this to be a reasonable dependency and should be common enough to
+ * not cause problems.
+ *
+ * @param string $svg Svg file path.
+ *
+ * @return object Object with 'width' and 'height' attributes values of svg file.
+ */
 function get_dimensions( $svg ) {
 	$svg = simplexml_load_file( $svg );
 	$attributes = $svg->attributes();
@@ -45,52 +59,69 @@ function get_dimensions( $svg ) {
 	return (object) array( 'width' => $width, 'height' => $height );
 }
 
-// Browsers may or may not show SVG files properly without a height/width.
-// WordPress specifically defines width/height as "0" if it cannot figure it out.
-// Thus the below is needed.
-//
-// Consider this the "server side" fix for dimensions.
-// Which is needed for the Media Grid within the Administratior.
+/**
+ * Browsers may or may not show SVG files properly without a height/width.
+ * WordPress specifically defines width/height as "0" if it cannot figure it out.
+ * Thus the below is needed.
+ *
+ * Consider this the "server side" fix for dimensions.
+ * Which is needed for the Media Grid within the Administratior.
+ *
+ * @param array        $response   Array of prepared attachment data.
+ * @param (int|object) $attachment Attachment ID or object.
+ * @param array        $meta       Array of attachment meta data.
+ *
+ * @return array Modified array of attachment data.
+ */
 function adjust_response_for_svg( $response, $attachment, $meta ) {
-	if( $response['mime'] == 'image/svg+xml' && empty( $response['sizes'] ) ) {
+	if ( 'image/svg+xml' === $response['mime'] && empty( $response['sizes'] ) ) {
 		$svg_file_path = get_attached_file( $attachment->ID );
 		$dimensions = get_dimensions( $svg_file_path );
 
-		$response[ 'sizes' ] = array(
-				'full' => array(
-					'url' => $response[ 'url' ],
-					'width' => $dimensions->width,
-					'height' => $dimensions->height,
-					'orientation' => $dimensions->width > $dimensions->height ? 'landscape' : 'portrait'
-			)
+		$response['sizes'] = array(
+			'full' => array(
+				'url' => $response['url'],
+				'width' => $dimensions->width,
+				'height' => $dimensions->height,
+				'orientation' => $dimensions->width > $dimensions->height ? 'landscape' : 'portrait',
+			),
 		);
 	}
 
 	return $response;
 }
-// Browsers may or may not show SVG files properly without a height/width.
-// WordPress specifically defines width/height as "0" if it cannot figure it out.
-// Thus the below is needed.
-//
-// Consider this the "client side" fix for dimensions. But only for the Administratior.
-//
-// WordPress requires inline administration styles to be wrapped in an actionable function.
-// These styles specifically address the Media Listing styling and Featured Image
-// styling so that the images show up in the Administration area.
+
+/**
+ * Browsers may or may not show SVG files properly without a height/width.
+ * WordPress specifically defines width/height as "0" if it cannot figure it out.
+ * Thus the below is needed.
+ *
+ * Consider this the "client side" fix for dimensions. But only for the Administratior.
+ *
+ * WordPress requires inline administration styles to be wrapped in an actionable function.
+ * These styles specifically address the Media Listing styling and Featured Image
+ * styling so that the images show up in the Administration area.
+ *
+ * @return void
+ */
 function administration_styles() {
-	// Media Listing Fix
+	// Media Listing Fix.
 	wp_add_inline_style( 'wp-admin', ".media .media-icon img[src$='.svg'] { width: auto; height: auto; }" );
-	// Featured Image Fix
+	// Featured Image Fix.
 	wp_add_inline_style( 'wp-admin', "#postimagediv .inside img[src$='.svg'] { width: 100%; height: auto; }" );
 }
 
-// Browsers may or may not show SVG files properly without a height/width.
-// WordPress specifically defines width/height as "0" if it cannot figure it out.
-// Thus the below is needed.
-//
-// Consider this the "client side" fix for dimensions. But only for the End User.
+/**
+ * Browsers may or may not show SVG files properly without a height/width.
+ * WordPress specifically defines width/height as "0" if it cannot figure it out.
+ * Thus the below is needed.
+ *
+ * Consider this the "client side" fix for dimensions. But only for the End User.
+ *
+ * @prints style tag
+ */
 function public_styles() {
-	// Featured Image Fix
+	// Featured Image Fix.
 	echo "<style>.post-thumbnail img[src$='.svg'] { width: 100%; height: auto; }</style>";
 }
 
@@ -99,5 +130,3 @@ add_filter( 'upload_mimes', __NAMESPACE__ . '\\allow_svg_uploads' );
 add_filter( 'wp_prepare_attachment_for_js', __NAMESPACE__ . '\\adjust_response_for_svg', 10, 3 );
 add_action( 'admin_enqueue_scripts', __NAMESPACE__ . '\\administration_styles' );
 add_action( 'wp_head', __NAMESPACE__ . '\\public_styles' );
-
-?>
