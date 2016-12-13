@@ -51,10 +51,17 @@ function allow_svg_uploads( $existing_mime_types = array() ) {
  * @return object Object with 'width' and 'height' attributes values of svg file.
  */
 function get_dimensions( $svg ) {
-	$svg = simplexml_load_file( $svg );
-	$attributes = $svg->attributes();
-	$width = (string) $attributes->width;
-	$height = (string) $attributes->height;
+	$width = '0';
+	$height = '0';
+
+	if ( file_exists( $svg ) ) {
+		$svg_markup = simplexml_load_file( $svg );
+		if ( false !== $svg_markup ) {
+			$attributes = $svg_markup->attributes();
+			$width = isset( $attributes->width ) ? (string) $attributes->width : '0';
+			$height = isset( $attributes->height ) ? (string) $attributes->height : '0';
+		}
+	}
 
 	return (object) array( 'width' => $width, 'height' => $height );
 }
@@ -122,7 +129,7 @@ function administration_styles() {
  */
 function public_styles() {
 	// Featured Image Fix.
-	echo "<style>.post-thumbnail img[src$='.svg'] { width: 100%; height: auto; }</style>";
+	echo "<style type=\"text/css\">.post-thumbnail img[src$='.svg'] { width: 100%; height: auto; }</style>";
 }
 
 // Do work son.
