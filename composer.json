@@ -31,6 +31,7 @@
 		"dealerdirect/phpcodesniffer-composer-installer": "*"
 	},
 	"scripts": {
+		"test": "phpcs",
 		"post-install-cmd": "@phpcs_standards",
 		"post-update-cmd" : "@phpcs_standards",
 		"phpcs_standards" : "\"vendor/bin/phpcs\" --config-set installed_paths vendor/wp-coding-standards/wpcs,vendor/frenck/php-compatibility"
