@@ -67,35 +67,50 @@ function get_dimensions( $svg ) {
 }
 
 /**
- * Browsers may or may not show SVG files properly without a height/width.
- * WordPress specifically defines width/height as "0" if it cannot figure it out.
- * Thus the below is needed.
+ * Save svg metadata
  *
  * Consider this the "server side" fix for dimensions.
  * Which is needed for the Media Grid within the Administratior.
  *
- * @param array        $response   Array of prepared attachment data.
- * @param (int|object) $attachment Attachment ID or object.
- * @param array        $meta       Array of attachment meta data.
+ * @param array $metadata      Array of empty attachment
+ * metadata (since wordpress doesn't fill metadata for svg files).
+ * @param int   $attachment_id Current attachment ID.
  *
- * @return array Modified array of attachment data.
+ * @return array Modified array of attachment metadata.
  */
-function adjust_response_for_svg( $response, $attachment, $meta ) {
-	if ( 'image/svg+xml' === $response['mime'] && empty( $response['sizes'] ) ) {
-		$svg_file_path = get_attached_file( $attachment->ID );
-		$dimensions = get_dimensions( $svg_file_path );
+function store_metadata_for_svg( $metadata, $attachment_id ) {
+	$attachment = get_post( $attachment_id );
+	if ( null !== $attachment ) {
+		$mime_type = get_post_mime_type( $attachment );
 
-		$response['sizes'] = array(
-			'full' => array(
-				'url' => $response['url'],
-				'width' => $dimensions->width,
+		if ( 'image/svg+xml' === $mime_type ) {
+			$svg_file_path = $svg_file_path_relative = get_attached_file( $attachment->ID );
+			$uploads = wp_get_upload_dir();
+			if ( false === $uploads['error'] ) {
+				$svg_file_path_relative = str_replace( $uploads['basedir'] . '/', '', $svg_file_path );
+			}
+			$dimensions = get_dimensions( $svg_file_path );
+			$svg_url = wp_get_attachment_url( $attachment->ID );
+
+			$metadata = array(
+				'width'  => $dimensions->width,
 				'height' => $dimensions->height,
-				'orientation' => $dimensions->width > $dimensions->height ? 'landscape' : 'portrait',
-			),
-		);
+				'file'   => $svg_file_path_relative,
+				'sizes'  => array(
+					'full' => array(
+						'url' => $svg_url,
+						'file' => basename( $svg_file_path_relative ),
+						'width' => $dimensions->width,
+						'height' => $dimensions->height,
+						'orientation' => $dimensions->width > $dimensions->height ? 'landscape' : 'portrait',
+						'mime-type' => $mime_type,
+					),
+				),
+			);
+		}
 	}
 
-	return $response;
+	return $metadata;
 }
 
 /**
@@ -134,6 +149,6 @@ function public_styles() {
 
 // Do work son.
 add_filter( 'upload_mimes', __NAMESPACE__ . '\\allow_svg_uploads' );
-add_filter( 'wp_prepare_attachment_for_js', __NAMESPACE__ . '\\adjust_response_for_svg', 10, 3 );
+add_filter( 'wp_generate_attachment_metadata', __NAMESPACE__ . '\\store_metadata_for_svg', 10, 2 );
 add_action( 'admin_enqueue_scripts', __NAMESPACE__ . '\\administration_styles' );
 add_action( 'wp_head', __NAMESPACE__ . '\\public_styles' );
